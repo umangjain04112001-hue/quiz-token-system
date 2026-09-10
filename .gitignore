@@ -1,0 +1,12 @@
+# Secrets - never commit these
+.env
+
+# Local database (contains real student/token data)
+tokens.db
+
+# Python junk
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
