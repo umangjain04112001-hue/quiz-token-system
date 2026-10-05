@@ -1,98 +1,116 @@
-# Quiz Make-Up Token System
+# Quiz Make-Up Token System (Web App)
 
-A small command-line tool that issues a **one-time token** linking a student, a
-professor, and a missed quiz. When the student redeems the token, the system
-emails the professor a make-up request and permanently marks the token as used
-so it can never be reused.
+A small web application that issues **one-time tokens** for quiz make-up
+requests. A professor issues a token to a student who missed a quiz; the student
+redeems it on the website, which emails the professor a make-up request and
+permanently marks the token as used so it can never be reused.
 
-## How it works
+Live pages:
+- **Issue** a token (professor)
+- **Redeem** a token (student) — sends the email
+- **Check** a token's status without using it
 
-1. **Issue** – The professor (or system) creates a token for a student who
-   missed a quiz. The token is a cryptographically random string.
-2. **Redeem** – The student runs the redeem command with their token. If the
-   token is valid and unused, the system emails the professor and then flips the
-   token to "used" forever.
-3. **Verify** – Anyone can check a token's status without spending it.
+---
 
-The "used only once" guarantee is enforced by a SQLite database that persists
-the `used` state between runs. Redeeming uses a conditional `UPDATE ... WHERE
-used = 0`, so a token can never be spent twice — even on rapid double-runs.
+## Run it locally
 
-## Project structure
+1. Install Python 3.9+ (https://www.python.org/downloads/).
+2. Open a terminal in this folder and run:
+
+   ```
+   python -m venv venv
+   venv\Scripts\activate        (Mac/Linux: source venv/bin/activate)
+   pip install -r requirements.txt
+   ```
+
+3. Set up email (see "Email setup" below), then start the server:
+
+   ```
+   python app.py
+   ```
+
+4. Open http://localhost:5000 in your browser.
+
+---
+
+## Email setup
+
+The redeem page sends an email through Gmail. You configure this **once**.
+
+1. Turn on 2-Step Verification: https://myaccount.google.com/security
+2. Create an App Password: https://myaccount.google.com/apppasswords
+   (Google shows it with spaces for readability — remove the spaces when you use it.)
+3. Copy `.env.example` to `.env` and fill in:
+
+   ```
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_real_gmail@gmail.com
+   SMTP_PASSWORD=your16charapppassword
+   ```
+
+If email is not configured, issuing and checking tokens still work; only the
+redeem email will report that it isn't set up (and the token stays unused so it
+can be retried).
+
+---
+
+## Deploy it to a public URL (Render, free)
+
+This makes the app reachable at a link like `https://quiz-token-system.onrender.com`,
+with no one's laptop needing to stay on.
+
+1. Push this project to a GitHub repository.
+2. Create a free account at https://render.com and connect your GitHub.
+3. Click **New → Web Service** and pick this repository.
+4. Render reads `render.yaml` automatically. Confirm:
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `gunicorn app:app`
+5. In the service's **Environment** settings, add your two secret values:
+   - `SMTP_USER` = your Gmail address
+   - `SMTP_PASSWORD` = your Gmail App Password (no spaces)
+   (`SMTP_HOST` and `SMTP_PORT` come from `render.yaml`.)
+6. Click **Deploy**. When it finishes, Render gives you the public URL.
+
+> Note: on Render's free plan the app sleeps after inactivity and the local
+> token database resets on a full redeploy. That's fine for a demo or class use.
+> For permanent storage, attach a managed database.
+
+---
+
+## How the one-time guarantee works
+
+Each token is a long random string. Its used/unused state lives in a small
+database. Redeeming runs a conditional update that only succeeds if the token is
+still unused, so a token can never be spent twice — even on a rapid double
+submit. The email is sent *before* the token is marked used, so a failed email
+never wastes a token.
+
+---
+
+## Files
 
 ```
 quiz-token-system/
-├── README.md          # this file
-├── .gitignore         # keeps secrets + database out of git
-├── .env.example       # template for your SMTP credentials
-├── requirements.txt   # dependencies
-├── token_manager.py   # issue / verify / redeem logic + SQLite storage
-├── emailer.py         # sends the email via SMTP
-└── main.py            # command-line entry point
+|-- app.py             # Flask web server (routes for issue/redeem/verify)
+|-- token_manager.py   # issue / verify / redeem logic + storage
+|-- emailer.py         # sends the email
+|-- templates/         # the web pages (home, issue, redeem, verify)
+|-- static/            # stylesheet
+|-- requirements.txt   # dependencies
+|-- Procfile           # tells the host how to start the app
+|-- render.yaml        # Render deployment config
+|-- .env.example       # template for email credentials
+`-- .gitignore         # keeps secrets + database out of version control
 ```
 
-## Setup
+---
 
-### 1. Clone and install
+## Scope
 
-```bash
-git clone https://github.com/YOUR_USERNAME/quiz-token-system.git
-cd quiz-token-system
-python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### 2. Configure email credentials
-
-Copy the example env file and fill in your real values:
-
-```bash
-cp .env.example .env
-```
-
-Then edit `.env`. For Gmail you must use an **App Password**, not your normal
-password:
-
-1. Enable 2-Step Verification on your Google account.
-2. Go to Google Account → Security → App passwords.
-3. Generate a password for "Mail" and paste the 16-character value into
-   `SMTP_PASSWORD` in your `.env`.
-
-## Usage
-
-### Issue a token (professor)
-
-```bash
-python main.py issue \
-    --student-name "Umang Jain" \
-    --student-email "umang@example.com" \
-    --professor-email "prof@example.com" \
-    --quiz-id "QUIZ-03"
-```
-
-This prints a token. Give it to the student.
-
-### Verify a token (no spend)
-
-```bash
-python main.py verify --token "PASTE_TOKEN_HERE"
-```
-
-### Redeem a token (student) — sends the email
-
-```bash
-python main.py redeem --token "PASTE_TOKEN_HERE"
-```
-
-Running redeem a second time on the same token will fail.
-
-## Security note
-
-This is a **convenience and tracking tool**, not a security system. A student
-could always email a professor directly without a token. The token gives the
-professor a clean, structured, one-time make-up request and a record of when it
-was submitted. Do not treat it as authentication.
+This is a **convenience and tracking tool, not a security system.** A student
+could always email a professor directly. What the token adds is a clean,
+one-time, timestamped make-up request.
 
 ## License
 

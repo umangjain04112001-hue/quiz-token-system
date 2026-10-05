@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Issue a Token</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <h1>Issue a Token</h1>
+      <p>For professors</p>
+    </header>
+
+    <div class="card">
+      {% if token %}
+        <div class="msg good">Token created. Give this to the student - it can be used only once.</div>
+        <div class="token-box">{{ token }}</div>
+        <a class="back" href="{{ url_for('issue') }}">Issue another</a>
+        &nbsp;·&nbsp;
+        <a class="back" href="{{ url_for('home') }}">Home</a>
+      {% else %}
+        <h2>New make-up token</h2>
+        <p class="sub">Fill in the details. The student will use the generated token to request a make-up.</p>
+
+        {% if error %}<div class="msg bad">{{ error }}</div>{% endif %}
+
+        <form method="POST">
+          <label for="student_name">Student name</label>
+          <input type="text" id="student_name" name="student_name" value="{{ form.student_name if form else '' }}">
+
+          <label for="student_email">Student email</label>
+          <input type="email" id="student_email" name="student_email" value="{{ form.student_email if form else '' }}">
+
+          <label for="professor_email">Professor email (where the request is sent)</label>
+          <input type="email" id="professor_email" name="professor_email" value="{{ form.professor_email if form else '' }}">
+
+          <label for="quiz_id">Quiz ID</label>
+          <input type="text" id="quiz_id" name="quiz_id" placeholder="e.g. QUIZ-03" value="{{ form.quiz_id if form else '' }}">
+
+          <button type="submit">Generate token</button>
+        </form>
+        <a class="back" href="{{ url_for('home') }}">Back to home</a>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

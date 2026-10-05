@@ -1,0 +1,18 @@
+# Render deployment config.
+# When you connect this repo to Render, it reads this file automatically.
+services:
+  - type: web
+    name: quiz-token-system
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false      # you set this in the Render dashboard
+      - key: SMTP_PASSWORD
+        sync: false      # you set this in the Render dashboard (Gmail App Password)

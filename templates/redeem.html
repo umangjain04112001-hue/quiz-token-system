@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redeem a Token</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <h1>Redeem a Token</h1>
+      <p>For students</p>
+    </header>
+
+    <div class="card">
+      {% if success %}
+        <div class="msg good">
+          Done. Your make-up request for <strong>{{ quiz_id }}</strong> was sent to
+          <strong>{{ professor_email }}</strong>. This token is now used and cannot be used again.
+        </div>
+        <a class="back" href="{{ url_for('home') }}">Home</a>
+      {% else %}
+        <h2>Use your token</h2>
+        <p class="sub">Paste the token your professor gave you. This sends your make-up request and uses the token up.</p>
+
+        {% if error %}<div class="msg bad">{{ error }}</div>{% endif %}
+
+        <form method="POST">
+          <label for="token">Your token</label>
+          <input type="text" id="token" name="token" placeholder="Paste token here">
+          <button type="submit">Send make-up request</button>
+        </form>
+        <a class="back" href="{{ url_for('home') }}">Back to home</a>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Make-Up Token System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <h1>Quiz Make-Up Token System</h1>
+      <p>One-time tokens for quiz make-up requests</p>
+    </header>
+
+    <div class="home-links">
+      <a href="{{ url_for('issue') }}">
+        <strong>Issue a token</strong>
+        <span>For professors - create a one-time token for a student who missed a quiz.</span>
+      </a>
+      <a href="{{ url_for('redeem') }}">
+        <strong>Redeem a token</strong>
+        <span>For students - use your token to send a make-up request to your professor.</span>
+      </a>
+      <a href="{{ url_for('verify') }}">
+        <strong>Check a token</strong>
+        <span>See whether a token is still valid, without using it up.</span>
+      </a>
+    </div>
+
+    <footer>A convenience and tracking tool. Each token works only once.</footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check a Token</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <h1>Check a Token</h1>
+      <p>Status only - this does not use the token</p>
+    </header>
+
+    <div class="card">
+      <h2>Token status</h2>
+      <p class="sub">Paste a token to see whether it is still valid.</p>
+
+      {% if error %}<div class="msg bad">{{ error }}</div>{% endif %}
+
+      {% if checked %}
+        {% if is_valid %}
+          <div class="msg good">
+            {{ message }}<br>
+            Student: {{ row.student_name }} ({{ row.student_email }})<br>
+            Quiz: {{ row.quiz_id }}
+          </div>
+        {% else %}
+          <div class="msg bad">{{ message }}</div>
+        {% endif %}
+      {% endif %}
+
+      <form method="POST">
+        <label for="token">Token</label>
+        <input type="text" id="token" name="token" placeholder="Paste token here">
+        <button type="submit">Check status</button>
+      </form>
+      <a class="back" href="{{ url_for('home') }}">Back to home</a>
+    </div>
+  </div>
+</body>
+</html>

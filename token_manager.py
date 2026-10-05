@@ -3,26 +3,27 @@ token_manager.py
 ----------------
 Core logic for the one-time quiz make-up token system.
 
-Handles three things:
   - issue()  : create a new token for a student who missed a quiz
   - verify() : check a token's status WITHOUT spending it
   - redeem() : spend a token (marks it used forever)
 
 Storage is a local SQLite file so the "used" state survives between runs.
-Without persistent storage, "use only once" would be impossible.
+The database path can be set with the DB_FILE environment variable, which
+matters when the app is deployed to a host.
 """
 
+import os
 import sqlite3
 import secrets
 from datetime import datetime, timezone
 
-DB_FILE = "tokens.db"
+# Where the database lives. Overridable for deployment.
+DB_FILE = os.environ.get("DB_FILE", "tokens.db")
 
 
 def _connect():
-    """Open a connection to the SQLite database."""
     conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row  # lets us access columns by name
+    conn.row_factory = sqlite3.Row
     return conn
 
 
@@ -48,12 +49,9 @@ def init_db():
 
 
 def issue(student_name, student_email, professor_email, quiz_id):
-    """
-    Create a new one-time token and store it.
-    Returns the token string.
-    """
+    """Create a new one-time token and store it. Returns the token string."""
     init_db()
-    token = secrets.token_urlsafe(24)  # cryptographically random, not guessable
+    token = secrets.token_urlsafe(24)
     created_at = datetime.now(timezone.utc).isoformat()
 
     conn = _connect()
@@ -82,13 +80,13 @@ def get(token):
 def verify(token):
     """
     Check a token without spending it.
-    Returns a tuple: (is_valid: bool, message: str, row: dict or None)
+    Returns (is_valid: bool, message: str, row: dict or None)
     """
     row = get(token)
     if row is None:
         return False, "Token not found.", None
     if row["used"] == 1:
-        return False, f"Token already used at {row['used_at']}.", row
+        return False, f"This token was already used on {row['used_at']}.", row
     return True, "Token is valid and unused.", row
 
 
@@ -96,11 +94,10 @@ def redeem(token):
     """
     Spend a token. Marks it used forever.
 
-    IMPORTANT: this only flips the flag if the token is currently unused.
-    The WHERE used = 0 condition makes this safe even if called twice quickly:
-    the second call updates 0 rows and we detect that.
+    The WHERE used = 0 condition makes this safe even under a rapid double
+    submit: the second call updates 0 rows and we detect that.
 
-    Returns a tuple: (success: bool, message: str, row: dict or None)
+    Returns (success: bool, message: str, row: dict or None)
     """
     is_valid, message, row = verify(token)
     if not is_valid:
@@ -117,8 +114,7 @@ def redeem(token):
     conn.close()
 
     if rows_changed == 0:
-        # Someone beat us to it between verify and update.
-        return False, "Token was already used.", row
+        return False, "This token was already used.", row
 
     row["used"] = 1
     row["used_at"] = used_at
