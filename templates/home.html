@@ -13,18 +13,16 @@
       <p>One-time tokens for quiz make-up requests</p>
     </header>
 
-    <div class="home-links">
-      <a href="{{ url_for('issue') }}">
-        <strong>Issue a token</strong>
-        <span>For professors - create a one-time token for a student who missed a quiz.</span>
+    <div class="portal-grid">
+      <a class="portal-card professor" href="{{ url_for('professor') }}">
+        <span class="portal-badge">Professor</span>
+        <strong>Professor Portal</strong>
+        <span class="portal-desc">Issue a one-time token for a student who missed a quiz, or check a token's status.</span>
       </a>
-      <a href="{{ url_for('redeem') }}">
-        <strong>Redeem a token</strong>
-        <span>For students - use your token to send a make-up request to your professor.</span>
-      </a>
-      <a href="{{ url_for('verify') }}">
-        <strong>Check a token</strong>
-        <span>See whether a token is still valid, without using it up.</span>
+      <a class="portal-card student" href="{{ url_for('student') }}">
+        <span class="portal-badge">Student</span>
+        <strong>Student Portal</strong>
+        <span class="portal-desc">Have a token from your professor? Redeem it here to send your make-up request.</span>
       </a>
     </div>
 

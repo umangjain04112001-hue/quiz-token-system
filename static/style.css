@@ -165,3 +165,59 @@ footer {
   font-size: 0.8rem;
   margin-top: 24px;
 }
+
+/* ---- Two-portal landing ---- */
+.portal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 520px) {
+  .portal-grid { grid-template-columns: 1fr; }
+}
+
+.portal-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 20px;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.portal-card:hover { transform: translateY(-2px); }
+.portal-card.professor:hover { border-color: var(--accent); }
+.portal-card.student:hover { border-color: var(--good); }
+
+.portal-card strong {
+  font-size: 1.15rem;
+  color: var(--text);
+  margin: 12px 0 6px;
+}
+
+.portal-card .portal-desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---- Portal badges ---- */
+.portal-badge {
+  align-self: flex-start;
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--accent);
+}
+
+.portal-card.student .portal-badge { background: var(--good); }
+
+.professor-badge { background: var(--accent); margin-bottom: 10px; }
+.student-badge   { background: var(--good);   margin-bottom: 10px; }

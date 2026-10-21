@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Check a Token</title>
+  <title>Professor Portal - Check a Token</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <div class="wrap">
     <header class="site">
+      <span class="portal-badge professor-badge">Professor Portal</span>
       <h1>Check a Token</h1>
       <p>Status only - this does not use the token</p>
     </header>
@@ -36,7 +37,9 @@
         <input type="text" id="token" name="token" placeholder="Paste token here">
         <button type="submit">Check status</button>
       </form>
-      <a class="back" href="{{ url_for('home') }}">Back to home</a>
+      <a class="back" href="{{ url_for('professor') }}">Issue a token</a>
+      &nbsp;·&nbsp;
+      <a class="back" href="{{ url_for('home') }}">Home</a>
     </div>
   </div>
 </body>

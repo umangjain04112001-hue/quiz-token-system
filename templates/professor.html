@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Issue a Token</title>
+  <title>Professor Portal - Issue a Token</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <div class="wrap">
     <header class="site">
+      <span class="portal-badge professor-badge">Professor Portal</span>
       <h1>Issue a Token</h1>
-      <p>For professors</p>
     </header>
 
     <div class="card">
       {% if token %}
         <div class="msg good">Token created. Give this to the student - it can be used only once.</div>
         <div class="token-box">{{ token }}</div>
-        <a class="back" href="{{ url_for('issue') }}">Issue another</a>
+        <a class="back" href="{{ url_for('professor') }}">Issue another</a>
+        &nbsp;·&nbsp;
+        <a class="back" href="{{ url_for('professor_check') }}">Check a token</a>
         &nbsp;·&nbsp;
         <a class="back" href="{{ url_for('home') }}">Home</a>
       {% else %}
@@ -41,7 +43,9 @@
 
           <button type="submit">Generate token</button>
         </form>
-        <a class="back" href="{{ url_for('home') }}">Back to home</a>
+        <a class="back" href="{{ url_for('professor_check') }}">Check a token's status</a>
+        &nbsp;·&nbsp;
+        <a class="back" href="{{ url_for('home') }}">Home</a>
       {% endif %}
     </div>
   </div>

@@ -3,11 +3,14 @@ app.py
 ------
 Web version of the one-time quiz make-up token system.
 
-Pages:
-  /            - home, links to the two flows
-  /issue       - professor issues a token (form)
-  /redeem      - student redeems a token (form) -> emails the professor
-  /verify      - optional, check a token's status without spending it
+Two separate portals:
+  /              - landing page: choose Professor or Student portal
+  /professor     - PROFESSOR portal: issue a token (form)
+  /professor/check - PROFESSOR portal: check a token's status (no spend)
+  /student       - STUDENT portal: redeem a token -> emails the professor
+
+Old routes (/issue, /redeem, /verify) redirect to the new portals so any
+existing links keep working.
 
 Run locally:
   python app.py
@@ -33,18 +36,21 @@ def home():
     return render_template("home.html")
 
 
-@app.route("/issue", methods=["GET", "POST"])
-def issue():
+# ----------------------------------------------------------------------------
+# PROFESSOR PORTAL
+# ----------------------------------------------------------------------------
+
+@app.route("/professor", methods=["GET", "POST"])
+def professor():
     if request.method == "POST":
         student_name = request.form.get("student_name", "").strip()
         student_email = request.form.get("student_email", "").strip()
         professor_email = request.form.get("professor_email", "").strip()
         quiz_id = request.form.get("quiz_id", "").strip()
 
-        # Basic validation: all fields required.
         if not all([student_name, student_email, professor_email, quiz_id]):
             return render_template(
-                "issue.html",
+                "professor.html",
                 error="Please fill in every field.",
                 form=request.form,
             )
@@ -52,58 +58,81 @@ def issue():
         token = token_manager.issue(
             student_name, student_email, professor_email, quiz_id
         )
-        return render_template("issue.html", token=token)
+        return render_template("professor.html", token=token)
 
-    return render_template("issue.html")
+    return render_template("professor.html")
 
 
-@app.route("/redeem", methods=["GET", "POST"])
-def redeem():
+@app.route("/professor/check", methods=["GET", "POST"])
+def professor_check():
+    if request.method == "POST":
+        token = request.form.get("token", "").strip()
+        if not token:
+            return render_template("check.html", error="Please paste a token.")
+        is_valid, message, row = token_manager.verify(token)
+        return render_template(
+            "check.html", checked=True, is_valid=is_valid, message=message, row=row
+        )
+    return render_template("check.html")
+
+
+# ----------------------------------------------------------------------------
+# STUDENT PORTAL
+# ----------------------------------------------------------------------------
+
+@app.route("/student", methods=["GET", "POST"])
+def student():
     if request.method == "POST":
         token = request.form.get("token", "").strip()
 
         if not token:
-            return render_template("redeem.html", error="Please paste your token.")
+            return render_template("student.html", error="Please paste your token.")
 
         # Check the token WITHOUT spending it.
         is_valid, message, row = token_manager.verify(token)
         if not is_valid:
-            return render_template("redeem.html", error=message)
+            return render_template("student.html", error=message)
 
         # Send the email FIRST. If it fails, the token stays valid.
         sent, email_message = emailer.send_makeup_request(row)
         if not sent:
             return render_template(
-                "redeem.html",
+                "student.html",
                 error=f"{email_message} Your token was NOT used - please try again.",
             )
 
         # Email worked, so now spend the token.
         success, spend_message, row = token_manager.redeem(token)
         if not success:
-            return render_template("redeem.html", error=spend_message)
+            return render_template("student.html", error=spend_message)
 
         return render_template(
-            "redeem.html",
+            "student.html",
             success=True,
             professor_email=row["professor_email"],
             quiz_id=row["quiz_id"],
         )
 
-    return render_template("redeem.html")
+    return render_template("student.html")
 
 
-@app.route("/verify", methods=["GET", "POST"])
-def verify():
-    if request.method == "POST":
-        token = request.form.get("token", "").strip()
-        if not token:
-            return render_template("verify.html", error="Please paste a token.")
-        is_valid, message, row = token_manager.verify(token)
-        return render_template(
-            "verify.html", checked=True, is_valid=is_valid, message=message, row=row
-        )
-    return render_template("verify.html")
+# ----------------------------------------------------------------------------
+# Backwards-compatible redirects for the old single-page routes
+# ----------------------------------------------------------------------------
+
+@app.route("/issue")
+def issue_redirect():
+    return redirect(url_for("professor"))
+
+
+@app.route("/redeem")
+def redeem_redirect():
+    return redirect(url_for("student"))
+
+
+@app.route("/verify")
+def verify_redirect():
+    return redirect(url_for("professor_check"))
 
 
 if __name__ == "__main__":
