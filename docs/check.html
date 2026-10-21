@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Professor Portal - Check a Token</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <span class="portal-badge professor-badge">Professor Portal</span>
+      <h1>Check a Token</h1>
+      <p>Status only - this does not use the token</p>
+    </header>
+
+    <div class="card">
+      <h2>Token status</h2>
+      <p class="sub">Paste a token to see whether it is still valid.</p>
+
+      <div id="msg" class="msg" style="display:none;"></div>
+
+      <form id="check-form">
+        <label for="token">Token</label>
+        <input type="text" id="token" name="token" placeholder="Paste token here">
+        <button type="submit" id="submit-btn">Check status</button>
+      </form>
+
+      <a class="back" href="professor.html">Issue a token</a>
+      &nbsp;·&nbsp;
+      <a class="back" href="index.html">Home</a>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById("check-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      hide("msg");
+
+      if (!firebaseReady || FIREBASE_CONFIG.projectId.indexOf("PASTE_") === 0) {
+        showMessage("msg", "bad", "The site isn't configured yet (Firebase keys missing).");
+        return;
+      }
+
+      const token = document.getElementById("token").value.trim();
+      if (!token) {
+        showMessage("msg", "bad", "Please paste a token.");
+        return;
+      }
+
+      const btn = document.getElementById("submit-btn");
+      btn.disabled = true;
+      btn.textContent = "Checking...";
+      try {
+        const r = await checkToken(token);
+        if (r.valid) {
+          showMessage(
+            "msg", "good",
+            r.message + "<br>Student: " + r.data.student_name +
+            " (" + r.data.student_email + ")<br>Quiz: " + r.data.quiz_id
+          );
+        } else {
+          showMessage("msg", "bad", r.message);
+        }
+      } catch (err) {
+        console.error(err);
+        showMessage("msg", "bad", "Something went wrong. Check your connection and try again.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Check status";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Professor Portal - Issue a Token</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <span class="portal-badge professor-badge">Professor Portal</span>
+      <h1>Issue a Token</h1>
+    </header>
+
+    <div class="card">
+      <h2>New make-up token</h2>
+      <p class="sub">Fill in the details. The student will use the generated token to request a make-up.</p>
+
+      <div id="msg" class="msg" style="display:none;"></div>
+      <div id="token-result" style="display:none;">
+        <div class="msg good">Token created. Give this to the student - it can be used only once.</div>
+        <div class="token-box" id="token-value"></div>
+      </div>
+
+      <form id="issue-form">
+        <label for="student_name">Student name</label>
+        <input type="text" id="student_name" name="student_name">
+
+        <label for="student_email">Student email</label>
+        <input type="email" id="student_email" name="student_email">
+
+        <label for="professor_email">Professor email (where the request is sent)</label>
+        <input type="email" id="professor_email" name="professor_email">
+
+        <label for="quiz_id">Quiz ID</label>
+        <input type="text" id="quiz_id" name="quiz_id" placeholder="e.g. QUIZ-03">
+
+        <button type="submit" id="submit-btn">Generate token</button>
+      </form>
+
+      <a class="back" href="check.html">Check a token's status</a>
+      &nbsp;·&nbsp;
+      <a class="back" href="index.html">Home</a>
+    </div>
+  </div>
+
+  <!-- Firebase + EmailJS SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById("issue-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      hide("msg");
+      hide("token-result");
+
+      if (configMissing()) {
+        showMessage("msg", "bad", "The site isn't configured yet (Firebase/EmailJS keys missing).");
+        return;
+      }
+
+      const name = document.getElementById("student_name").value.trim();
+      const semail = document.getElementById("student_email").value.trim();
+      const pemail = document.getElementById("professor_email").value.trim();
+      const quiz = document.getElementById("quiz_id").value.trim();
+
+      if (!name || !semail || !pemail || !quiz) {
+        showMessage("msg", "bad", "Please fill in every field.");
+        return;
+      }
+
+      const btn = document.getElementById("submit-btn");
+      btn.disabled = true;
+      btn.textContent = "Generating...";
+      try {
+        const token = await issueToken(name, semail, pemail, quiz);
+        document.getElementById("token-value").textContent = token;
+        document.getElementById("token-result").style.display = "block";
+        document.getElementById("issue-form").reset();
+      } catch (err) {
+        console.error(err);
+        showMessage("msg", "bad", "Something went wrong creating the token. Check your connection and try again.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Generate token";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portal - Redeem a Token</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <span class="portal-badge student-badge">Student Portal</span>
+      <h1>Redeem a Token</h1>
+    </header>
+
+    <div class="card">
+      <h2>Use your token</h2>
+      <p class="sub">Paste the token your professor gave you. This sends your make-up request and uses the token up.</p>
+
+      <div id="msg" class="msg" style="display:none;"></div>
+
+      <form id="redeem-form">
+        <label for="token">Your token</label>
+        <input type="text" id="token" name="token" placeholder="Paste token here">
+        <button type="submit" id="submit-btn">Send make-up request</button>
+      </form>
+
+      <a class="back" href="index.html">Back to home</a>
+    </div>
+  </div>
+
+  <!-- Firebase + EmailJS SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById("redeem-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      hide("msg");
+
+      if (configMissing()) {
+        showMessage("msg", "bad", "The site isn't configured yet (Firebase/EmailJS keys missing).");
+        return;
+      }
+
+      const token = document.getElementById("token").value.trim();
+      if (!token) {
+        showMessage("msg", "bad", "Please paste your token.");
+        return;
+      }
+
+      const btn = document.getElementById("submit-btn");
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+      try {
+        const result = await redeemToken(token);
+        if (result.ok) {
+          showMessage(
+            "msg", "good",
+            "Done. Your make-up request for <strong>" + result.quiz_id +
+            "</strong> was sent to <strong>" + result.professor_email +
+            "</strong>. This token is now used and cannot be used again."
+          );
+          document.getElementById("redeem-form").style.display = "none";
+        } else {
+          showMessage("msg", "bad", result.message);
+        }
+      } catch (err) {
+        console.error(err);
+        showMessage("msg", "bad", "Something went wrong. Check your connection and try again.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Send make-up request";
+      }
+    });
+  </script>
+</body>
+</html>
